@@ -1,16 +1,21 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 public class BallHandler : MonoBehaviour
 {
+    public GameObject ballPrefab;
+    public Rigidbody2D pivot;
     public Camera mainCamera;
-    public SpringJoint2D currentBallSpringJoint;
-    public float delayTime = 5f;
+    public float delayTime;
+    public float respawnTime;
     private bool isDragging;
-    public Rigidbody2D currentBallRigidbody;
+    private SpringJoint2D currentBallSpringJoint;
+    private Rigidbody2D currentBallRigidbody;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        SpawnNewBall();
     }
 
     // Update is called once per frame
@@ -36,11 +41,22 @@ public class BallHandler : MonoBehaviour
         currentBallRigidbody.position = worldPosition;
     }
 
+    private void SpawnNewBall()
+    {
+        GameObject ballInstance = Instantiate(ballPrefab, pivot.position, Quaternion.identity);
+        
+        currentBallRigidbody = ballInstance.GetComponent<Rigidbody2D>();
+        currentBallSpringJoint = ballInstance.GetComponent<SpringJoint2D>();
+        
+        currentBallSpringJoint.connectedBody = pivot;
+    }
+
     private void LaunchBall()
     {
         currentBallRigidbody.bodyType = RigidbodyType2D.Dynamic;
         currentBallRigidbody = null;
         Invoke(nameof(DetachBall), delayTime);
+        Invoke(nameof(SpawnNewBall), respawnTime);
     }
 
     private void DetachBall()
